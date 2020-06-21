@@ -8,6 +8,9 @@ from io import BytesIO
 app = Flask(__name__)
 api = Api(app)
 
+MAX_WIDTH = 5000
+MAX_HEIGHT = 5000
+
 
 def get_new_ratio(orig_w, orig_h, new_w, new_h):
     ratio = orig_w / orig_h
@@ -40,9 +43,9 @@ def serve_pil_image(pil_img):
 def validate_args(args):
     if "url" not in args:
         return False, {"error": "missing url param"}
-    if "width" not in args or not args["width"].isdigit():
+    if "width" not in args or not args["width"].isdigit() and int(args["width"]) > MAX_WIDTH:
         return False, {"error": "missing or invalid width param"}
-    if "height" not in args or not args["height"].isdigit():
+    if "height" not in args or not args["height"].isdigit() and int(args["height"]) > MAX_HEIGHT:
         return False, {"error": "missing or invalid height param"}
     return True, {}
 
