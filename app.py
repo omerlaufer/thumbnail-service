@@ -1,5 +1,5 @@
 from flask import Flask, send_file
-from flask_restful import Api, Resource, reqparse, request
+from flask_restful import Api, Resource, request
 import requests
 from PIL import Image, ImageOps
 from io import BytesIO
@@ -27,7 +27,7 @@ def get_new_image(img, new_width, new_height):
     delta_width = new_width - exists_width
     delta_height = new_height - exists_height
     border = (delta_width//2, delta_height//2, delta_width - (delta_width//2), delta_height-(delta_height//2))
-    img_with_border = ImageOps.expand(img, border=border, fill="red")
+    img_with_border = ImageOps.expand(img, border=border, fill="black")
     return img_with_border
 
 def serve_pil_image(pil_img):
@@ -37,6 +37,17 @@ def serve_pil_image(pil_img):
     return send_file(img_io, mimetype='image/jpeg')
 
 
+def validate_args(args):
+    if "url" not in args:
+        return False, {"error": "missing url param"}
+    if "width" not in args or not args["width"].isdigit():
+        return False, {"error": "missing or invalid width param"}
+    if "height" not in args or not args["height"].isdigit():
+        return False, {"error": "missing or invalid height param"}
+    return True, {}
+
+
+
 class Thumbnail(Resource):
     def get(self):
         """
@@ -44,16 +55,29 @@ class Thumbnail(Resource):
         :return: resized padded image
         """
         args = request.args
-        url = args.get("url")
-        new_width = int(args.get("width"))
-        new_height = int(args.get("height"))
-        data = requests.get(url)
-        img = Image.open(BytesIO(data.content))
+        valid, msg = validate_args(args)
+        if not valid:
+            return msg, 400
+
+        url = args["url"]
+        new_width = int(args["width"])
+        new_height = int(args["height"])
+
+        try:
+            data = requests.get(url, timeout=1)
+        except requests.exceptions.ConnectionError:
+            return {"error": "url not found"}, 404
+        data.raise_for_status()
+        try:
+            img = Image.open(BytesIO(data.content))
+        except OSError:
+            return {"error": "url is not an image"}, 400
         new_img = get_new_image(img, new_width, new_height)
         return serve_pil_image(new_img)
 
 
 api.add_resource(Thumbnail, "/thumbnail")
+
 if __name__ == "__main__":
   app.run()
 
