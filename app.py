@@ -43,9 +43,9 @@ def serve_pil_image(pil_img):
 def validate_args(args):
     if "url" not in args:
         return False, {"error": "missing url param"}
-    if "width" not in args or not args["width"].isdigit() and int(args["width"]) > MAX_WIDTH:
+    if "width" not in args or not args["width"].isdigit() or int(args["width"]) > MAX_WIDTH:
         return False, {"error": "missing or invalid width param"}
-    if "height" not in args or not args["height"].isdigit() and int(args["height"]) > MAX_HEIGHT:
+    if "height" not in args or not args["height"].isdigit() or int(args["height"]) > MAX_HEIGHT:
         return False, {"error": "missing or invalid height param"}
     return True, {}
 
