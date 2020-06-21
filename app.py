@@ -39,6 +39,10 @@ def serve_pil_image(pil_img):
 
 class Thumbnail(Resource):
     def get(self):
+        """
+        GET /thumbnail?url=<url>&width=<width>&height=<height>
+        :return: resized padded image
+        """
         args = request.args
         url = args.get("url")
         new_width = int(args.get("width"))
@@ -50,6 +54,7 @@ class Thumbnail(Resource):
 
 
 api.add_resource(Thumbnail, "/thumbnail")
-app.run(debug=True)
-# /thumbnail?url=<url>&width=<width>&height=<height>
+if __name__ == "__main__":
+  app.run()
+
 
